@@ -16,9 +16,13 @@ public class NumberGuesser{
 					System.out.println("I picked a random number between 1-10, let's see if you can guess.");
 					number = new Random().nextInt(9)+1;
 				}
-				else {
-					System.out.println("That's wrong");
-				}
+                else if(guess > number ) {
+                    System.out.println("To High");
+                    System.out.println("That's wrong");
+                } else {
+                    System.out.println("To Low");
+                    System.out.println("That's wrong");
+                     }
 			}
 		}
 		catch(Exception e) {

@@ -6,6 +6,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 
 public class Server {
     int port = 3001;
@@ -82,6 +83,62 @@ public class Server {
             }
             return true;
         }
+        else if(message.equalsIgnoreCase("rolldice")) {
+            System.out.println("From Client: " + message);
+            
+            
+            Random rand = new Random();
+            int upperlimit = 2;
+            
+            int diceroll = rand.nextInt(upperlimit);
+            //Diceroll could only choose from 0 or 1. 0 is Heads and 1 is Tails
+            String rev;
+            
+            if(diceroll == 0) {
+                
+            
+                rev = "Heads";
+            }
+            else {
+                rev = "Tails";
+            }
+
+            
+            System.out.println("To client: " + rev);
+            //out.writeObject(rev);
+            broadcast(rev, clientId);
+            //out.writeObject(rev);
+        }
+        
+        else if(message.startsWith("roll")){
+            System.out.println("From Client: " + message);
+            StringBuilder sb = new StringBuilder(message.replace("roll ", ""));
+            String rev1 = sb.toString();
+          
+        
+            int char1 = rev1.indexOf("d");
+            String rev2 = rev1.substring(char1+1);
+            String rev3 = rev1.substring(0, char1);
+            //The number of dice they want
+            int firstnum = Integer.parseInt(rev2);
+            //The number of sides of a dice the user wants. Doesnt have to be just 6
+            int secondnum = Integer.parseInt(rev3);
+            Random rand1 = new Random();
+            int equation = firstnum * secondnum;
+            
+            //For example 2d6, the result function would generate a number between 2 and 12. 
+            int result = rand1.nextInt(equation - firstnum) + firstnum;
+            String result1 = Integer.toString(result);
+           
+            broadcast(result1, clientId);
+            
+        }
+            
+        else {
+            System.out.println("From client: " + message);
+            //out.println(message);
+        }
+
         return false;
     }
     public static void main(String[] args) {

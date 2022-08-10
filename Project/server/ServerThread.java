@@ -6,17 +6,16 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.ArrayList; 
+
 import Project.common.Payload;
 import Project.common.PayloadType;
 import Project.common.RoomResultPayload;
-
+import Project.common.ClientPayload;;
 
 /**
  * A server-side representation of a single client
  */
 public class ServerThread extends Thread {
-    private boolean fullAge;
     private Socket client;
     private String clientName;
     private boolean isRunning = false;
@@ -26,7 +25,7 @@ public class ServerThread extends Thread {
     private Room currentRoom;
     private static Logger logger = Logger.getLogger(ServerThread.class.getName());
     private long myId;
-    ArrayList<String> mute = new ArrayList<String>();
+    private String formattedName;
 
     public void setClientId(long id) {
         myId = id;
@@ -39,6 +38,14 @@ public class ServerThread extends Thread {
     public boolean isRunning() {
         return isRunning;
     }
+    public void setFormattedName(String name) {
+        formattedName = name;
+    }
+
+    public String getFormattedName() {
+        return formattedName;
+    }
+
 
     private void info(String message) {
         System.out.println(String.format("Thread[%s]: %s", getId(), message));
@@ -51,37 +58,6 @@ public class ServerThread extends Thread {
         this.currentRoom = room;
 
     }
-    //ads list to client
-    protected void setAddList(String name) {
-        mute.add(name);
-    }
-   
-    //returns clients list
-    protected String getList() {
-        return mute.get(0);
-    }
- 
-    //removes list from client
-    protected void setRemoveList(String name) {
-        mute.remove(name);
-    }
-
-    //checks if cllient is muted with sender
-    protected synchronized boolean isMuted(String str2) {
-        if(mute.size()==0) {
-            fullAge = false;
-        }
-       
-        else if (mute.get(0).equals(str2)) {
-            fullAge = true;
-        }
-        else {
-            fullAge = false;
-        }
-    
-        return fullAge;
-    }
-   
 
     protected void setClientName(String name) {
         if (name == null || name.isBlank()) {
@@ -98,6 +74,8 @@ public class ServerThread extends Thread {
     protected synchronized Room getCurrentRoom() {
         return currentRoom;
     }
+
+
 
     protected synchronized void setCurrentRoom(Room room) {
         if (room != null) {
@@ -152,6 +130,26 @@ public class ServerThread extends Thread {
         p.setClientId(id);
         return send(p);
     }
+
+    public boolean sendExistingClient(long clientId, String clientName, String formattedName) {
+        ClientPayload p = new ClientPayload();
+        p.setPayloadType(PayloadType.SYNC_CLIENT);
+        p.setClientId(clientId);
+        p.setFormattedName(formattedName);
+        p.setClientName(clientName);
+        return send(p);
+    }
+
+    public boolean sendConnectionStatus(long clientId, String who, String formattedName, boolean isConnected) {
+        ClientPayload p = new ClientPayload();
+        p.setPayloadType(isConnected ? PayloadType.CONNECT : PayloadType.DISCONNECT);
+        p.setClientId(clientId);
+        p.setFormattedName(formattedName);
+        p.setClientName(who);
+        p.setMessage(isConnected ? "connected" : "disconnected");
+        return send(p);
+    }
+
 
     public boolean sendMessage(long clientId, String message) {
         Payload p = new Payload();

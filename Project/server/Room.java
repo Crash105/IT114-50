@@ -2,14 +2,14 @@ package Project.server;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.Random;
-
+import java.util.Map.Entry;
 
 import Project.common.Constants;
+import Project.common.GeneralUtils;
+import Project.common.MyLogger;
 
 public class Room implements AutoCloseable {
 	private String name;
@@ -22,15 +22,15 @@ public class Room implements AutoCloseable {
 	private final static String DISCONNECT = "disconnect";
 	private final static String LOGOUT = "logout";
 	private final static String LOGOFF = "logoff";
-	private static Logger logger = Logger.getLogger(Room.class.getName());
-
+	private static MyLogger logger = MyLogger.getLogger(Room.class.getName());
+	private HashMap<String, String> converter = null;
 	public Room(String name) {
 		this.name = name;
 		isRunning = true;
 	}
 
 	private void info(String message) {
-		logger.log(Level.INFO, String.format("Room[%s]: %s", name, message));
+		logger.info(String.format("Room[%s]: %s", name, message));
 	}
 
 	public String getName() {
@@ -49,6 +49,8 @@ public class Room implements AutoCloseable {
 		if (clients.indexOf(client) > -1) {
 			info("Attempting to add a client that already exists");
 		} else {
+			client.setFormattedName(String.format("<font color=\"%s\">%s</font>", GeneralUtils.getRandomHexColor(),
+					client.getClientName()));
 			clients.add(client);
 			sendConnectionStatus(client, true);
 			sendRoomJoined(client);
@@ -74,9 +76,9 @@ public class Room implements AutoCloseable {
 	 * Checks the number of clients.
 	 * If zero, begins the cleanup process to dispose of the room
 	 */
-	private void checkClients() {
+	protected void checkClients() {
 		// Cleanup if room is empty and not lobby
-		if (!name.equalsIgnoreCase("lobby") && clients.size() == 0) {
+		if (!name.equalsIgnoreCase(Constants.LOBBY) && clients.size() == 0) {
 			close();
 		}
 	}
@@ -96,7 +98,6 @@ public class Room implements AutoCloseable {
 				String part1 = comm[1];
 				String[] comm2 = part1.split(" ");
 				String command = comm2[0];
-				String command1;
 				String roomName;
 				wasCommand = true;
 				switch (command) {
@@ -113,238 +114,11 @@ public class Room implements AutoCloseable {
 					case LOGOFF:
 						Room.disconnectClient(client, this);
 						break;
-					case "flip":
-						Random rand = new Random();
-						int upperlimit = 2;
-
-						int diceroll = rand.nextInt(upperlimit);
-						// Diceroll could only choose from 0 or 1. 0 is Heads and 1 is Tails
-						String rev;
-
-						if (diceroll == 0) {
-
-							rev = "Heads";
-						} else {
-							rev = "Tails";
-						}
-
-						String rev2 = "The Coin Flipped the side: " + "<b>" + rev + "</b>";
-
-						sendMessage(client, rev2);
-						break;
-					// out.writeObject(rev);
-					case "roll":
-						Random rand1 = new Random();
-						int upperlimit1 = 21;
-
-						// upperlimit1 =Integer.parseInt(command1);
-
-						// You can roll a number between 0 and 20
-						int roll = rand1.nextInt(upperlimit1);
-
-						String result1 = Integer.toString(roll);
-						String result2 = "Between 0 and 20, the code generated the number: " + "<u>" + result1 + "</u>";
-						sendMessage(client, result2);
-						break;
-					case "mute":
-						command1 = comm2[1];
-						// ads username to senders list
-						client.setAddList(command1);
-						break;
-					case "unmute":
-						// removes username from senders lis
-						command1 = comm2[1];
-						client.setRemoveList(command1);
-						break;
 					default:
 						wasCommand = false;
 						break;
 				}
 			}
-			if (message.startsWith("@")) {
-				long from = (client == null) ? Constants.DEFAULT_CLIENT_ID : client.getClientId();
-				String[] str = message.split("@");
-				String str1 = str[1];
-
-				client.sendMessage(from, message);
-				Iterator<ServerThread> iter = clients.iterator();
-				synchronized (clients) {
-					while (iter.hasNext()) {
-
-						ServerThread client2 = iter.next();
-						// checks if client2 matches @Username and that client2 is not muted with client
-						if (client2.getClientName().equals(str1) & !client2.isMuted(client.getClientName())) {
-							client2.sendMessage(from, message);
-						}
-
-					}
-
-				}
-				wasCommand = true;
-
-			}
-			char symbol = '*'; // bold
-			char symbol1 = '%'; // italics
-			char symbol2 = '&'; // color
-			char symbol3 = '!'; // underline
-			
-			if (message.charAt(0) == symbol && message.charAt(1) == symbol
-					&& message.charAt(message.length() - 2) == symbol
-					&& message.charAt(message.length() - 1) == symbol) {
-				String str = message.substring(2, message.length() - 2);
-				String str1 = "<b>" + str + "</b>";
-				sendMessage(client, " - " + str1);
-				wasCommand = true;
-
-
-				if (message.charAt(2) == symbol1 && message.charAt(3) == symbol1
-						&& message.charAt(message.length() - 4) == symbol1
-						&& message.charAt(message.length() - 3) == symbol1) {
-					String str2 = message.substring(4, message.length() - 4);
-					String str3 = "<b><i>" + str2 + "</i></b>";
-					sendMessage(client, " - " + str3);
-					wasCommand = true;
-
-
-				} else if (message.charAt(2) == symbol2 && message.charAt(3) == symbol2
-						&& message.charAt(message.length() - 4) == symbol2
-						&& message.charAt(message.length() - 3) == symbol2) {
-					String str2 = message.substring(4, message.length() - 4);
-					String str3 = "<b><font color=\"red\">" + str2 + "</font></b>";
-					sendMessage(client, " - " + str3);
-					wasCommand = true;
-
-
-				} else if (message.charAt(2) == symbol3 && message.charAt(3) == symbol3
-						&& message.charAt(message.length() - 4) == symbol3
-						&& message.charAt(message.length() - 3) == symbol3) {
-					String str2 = message.substring(4, message.length() - 4);
-					String str3 = "<b><u>" + str2 + "</u></b>";
-					sendMessage(client, " - " + str3);
-					wasCommand = true;
-
-
-				}
-
-			}
-
-			if (message.charAt(0) == symbol1 && message.charAt(1) == symbol1
-					&& message.charAt(message.length() - 2) == symbol1
-					&& message.charAt(message.length() - 1) == symbol1) {
-				String str = message.substring(2, message.length() - 2);
-				String str1 = "<i>" + str + "</i>";
-				sendMessage(client, " - " + str1);
-				wasCommand = true;
-
-
-				if (message.charAt(2) == symbol && message.charAt(3) == symbol
-						&& message.charAt(message.length() - 4) == symbol
-						&& message.charAt(message.length() - 3) == symbol) {
-					String str2 = message.substring(4, message.length() - 4);
-					String str3 = "<i><b>" + str2 + "</b></i>";
-					sendMessage(client, " - " + str3);
-					wasCommand = true;
-
-
-				} else if (message.charAt(2) == symbol2 && message.charAt(3) == symbol2
-						&& message.charAt(message.length() - 4) == symbol2
-						&& message.charAt(message.length() - 3) == symbol2) {
-					String str2 = message.substring(4, message.length() - 4);
-					String str3 = "<i><font color=\"red\">" + str2 + "</font></i>";
-					sendMessage(client, " - " + str3);
-					wasCommand = true;
-
-
-				} else if (message.charAt(2) == symbol3 && message.charAt(3) == symbol3
-						&& message.charAt(message.length() - 4) == symbol3
-						&& message.charAt(message.length() - 3) == symbol3) {
-					String str2 = message.substring(4, message.length() - 4);
-					String str3 = "<i><u>" + str2 + "</u></i>";
-					sendMessage(client, " - " + str3);
-					wasCommand = true;
-
-
-				}
-			}
-			if (message.charAt(0) == symbol2 && message.charAt(1) == symbol2
-					&& message.charAt(message.length() - 2) == symbol2
-					&& message.charAt(message.length() - 1) == symbol2) {
-				String str = message.substring(2, message.length() - 2);
-				String str1 = "<font color=\"red\">" + str + "</font>";
-				sendMessage(client, " - " + str1);
-				wasCommand = true;
-
-
-				if (message.charAt(2) == symbol1 && message.charAt(3) == symbol1
-						&& message.charAt(message.length() - 4) == symbol1
-						&& message.charAt(message.length() - 3) == symbol1) {
-					String str2 = message.substring(4, message.length() - 4);
-					String str3 = "<font color=\"red\">><i>" + str2 + "</i></>";
-					sendMessage(client, " - " + str3);
-					wasCommand = true;
-
-
-				} else if (message.charAt(2) == symbol && message.charAt(3) == symbol
-						&& message.charAt(message.length() - 4) == symbol
-						&& message.charAt(message.length() - 3) == symbol) {
-					String str2 = message.substring(4, message.length() - 4);
-					String str3 = "<font color=\"red\"><b>" + str2 + "</b></font>";
-					sendMessage(client, " - " + str3);
-					wasCommand = true;
-
-
-				} else if (message.charAt(2) == symbol3 && message.charAt(3) == symbol3
-						&& message.charAt(message.length() - 4) == symbol3
-						&& message.charAt(message.length() - 3) == symbol3) {
-					String str2 = message.substring(4, message.length() - 4);
-					String str3 = "<font color=\"red\"><u>" + str2 + "</u></font>";
-					sendMessage(client, " - " + str3);
-					wasCommand = true;
-
-
-				}
-
-			}
-			if (message.charAt(0) == symbol3 && message.charAt(1) == symbol3
-					&& message.charAt(message.length() - 2) == symbol3
-					&& message.charAt(message.length() - 1) == symbol3) {
-				String str = message.substring(2, message.length() - 2);
-				String str1 = "<u>" + str + "</u>";
-				sendMessage(client, " - " + str1);
-				wasCommand = true;
-
-
-				if (message.charAt(2) == symbol1 && message.charAt(3) == symbol1
-						&& message.charAt(message.length() - 4) == symbol1
-						&& message.charAt(message.length() - 3) == symbol1) {
-					String str2 = message.substring(4, message.length() - 4);
-					String str3 = "<u><i>" + str2 + "</i></u>";
-					sendMessage(client, " - " + str3);
-					wasCommand = true;
-
-
-				} else if (message.charAt(2) == symbol2 && message.charAt(3) == symbol2
-						&& message.charAt(message.length() - 4) == symbol2
-						&& message.charAt(message.length() - 3) == symbol2) {
-					String str2 = message.substring(4, message.length() - 4);
-					String str3 = "<u><font color=\"red\">" + str2 + "</font></u>";
-					sendMessage(client, " - " + str3);
-					wasCommand = true;
-
-
-				} else if (message.charAt(2) == symbol && message.charAt(3) == symbol
-						&& message.charAt(message.length() - 4) == symbol
-						&& message.charAt(message.length() - 3) == symbol) {
-					String str2 = message.substring(4, message.length() - 4);
-					String str3 = "<u><b>" + str2 + "</b></u>";
-					sendMessage(client, " - " + str3);
-					wasCommand = true;
-
-
-				}
-
-			}
-
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -399,23 +173,13 @@ public class Room implements AutoCloseable {
 			// it was a command, don't broadcast
 			return;
 		}
+		message = formatMessage(message);
 		long from = (sender == null) ? Constants.DEFAULT_CLIENT_ID : sender.getClientId();
 		synchronized (clients) {
 			Iterator<ServerThread> iter = clients.iterator();
-			boolean messageSent = true;
 			while (iter.hasNext()) {
 				ServerThread client = iter.next();
-
-				// mutes(doesnt send message) if client is muted with the sender
-				try {
-					if (!client.isMuted(sender.getClientName())) {
-
-						messageSent = client.sendMessage(from, message);
-					}
-
-				} catch (Exception e) {
-
-				}
+				boolean messageSent = client.sendMessage(from, message);
 				if (!messageSent) {
 					handleDisconnect(iter, client);
 				}
@@ -423,8 +187,41 @@ public class Room implements AutoCloseable {
 		}
 	}
 
+	protected String formatMessage(String message) {
+		String alteredMessage = message;
+		
+		// expect pairs ** -- __
+		if(converter == null){
+			converter = new HashMap<String, String>();
+			// user symbol => output text separated by |
+			converter.put("\\*{2}", "<b>|</b>");
+			converter.put("--", "<i>|</i>");
+			converter.put("__", "<u>|</u>");
+			converter.put("#r#", "<font color=\"red\">|</font>");
+			converter.put("#g#", "<font color=\"green\">|</font>");
+			converter.put("#b#", "<font color=\"blue\">|</font>");
+		}
+		for (Entry<String, String> kvp : converter.entrySet()) {
+			if (GeneralUtils.countOccurencesInString(alteredMessage, kvp.getKey().toLowerCase()) >= 2) {
+				String[] s1 = alteredMessage.split(kvp.getKey().toLowerCase());
+				String m = "";
+				for (int i = 0; i < s1.length; i++) {
+					if (i % 2 == 0) {
+						m += s1[i];
+					} else {
+						String[] wrapper = kvp.getValue().split("\\|");
+						m += String.format("%s%s%s", wrapper[0], s1[i], wrapper[1]);
+					}
+				}
+				alteredMessage = m;
+			}
+		}
+
+		return alteredMessage;
+	}
+
 	protected synchronized void sendUserListToClient(ServerThread receiver) {
-		logger.log(Level.INFO, String.format("Room[%s] Syncing client list of %s to %s", getName(), clients.size(),
+		info(String.format("Room[%s] Syncing client list of %s to %s", getName(), clients.size(),
 				receiver.getClientName()));
 		synchronized (clients) {
 			Iterator<ServerThread> iter = clients.iterator();
@@ -432,7 +229,8 @@ public class Room implements AutoCloseable {
 				ServerThread clientInRoom = iter.next();
 				if (clientInRoom.getClientId() != receiver.getClientId()) {
 					boolean messageSent = receiver.sendExistingClient(clientInRoom.getClientId(),
-							clientInRoom.getClientName());
+							clientInRoom.getClientName(),
+							clientInRoom.getFormattedName());
 					// receiver somehow disconnected mid iteration
 					if (!messageSent) {
 						handleDisconnect(null, receiver);
@@ -461,6 +259,7 @@ public class Room implements AutoCloseable {
 			for (int i = clients.size() - 1; i >= 0; i--) {
 				ServerThread client = clients.get(i);
 				boolean messageSent = client.sendConnectionStatus(sender.getClientId(), sender.getClientName(),
+						sender.getFormattedName(),
 						isConnected);
 				if (!messageSent) {
 					clients.remove(i);
@@ -472,7 +271,7 @@ public class Room implements AutoCloseable {
 		}
 	}
 
-	private synchronized void handleDisconnect(Iterator<ServerThread> iter, ServerThread client) {
+	protected synchronized void handleDisconnect(Iterator<ServerThread> iter, ServerThread client) {
 		if (iter != null) {
 			iter.remove();
 		}
@@ -483,6 +282,7 @@ public class Room implements AutoCloseable {
 	}
 
 	public void close() {
+		logger.info(getName() + " closing");
 		Server.INSTANCE.removeRoom(this);
 		isRunning = false;
 		clients = null;

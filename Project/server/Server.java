@@ -11,7 +11,6 @@ import java.util.Queue;
 
 public enum Server {
     INSTANCE;
-
     int port = 3001;
     // connected clients
     // private List<ServerThread> clients = new ArrayList<ServerThread>();
@@ -72,8 +71,7 @@ public enum Server {
                     if (incomingClients.size() > 0) {
                         ServerThread ic = incomingClients.peek();
                         if (ic != null) {
-                            // wait for the thread to start and for the client to send the client name
-                            // (username)
+                            //wait for the thread to start and for the client to send the client name (username)
                             if (ic.isRunning() && ic.getClientName() != null) {
                                 handleIncomingClient(ic);
                                 incomingClients.poll();
@@ -152,34 +150,30 @@ public enum Server {
             return true;
         }
     }
-
     /**
      * Returns Rooms with names having a partial match with query.
      * Hard coded to a limit of 10.
-     * 
      * @param query
      * @return
      */
-    protected synchronized List<String> getRooms(String query) {
+    protected synchronized List<String> getRooms(String query){
         return getRooms(query, 10);
     }
-
     /**
      * Returns Rooms with names having a partial match with query.
-     * 
      * @param query
      * @param limit The maximum records to return
      * @return
      */
-    protected synchronized List<String> getRooms(String query, int limit) {
+    protected synchronized List<String> getRooms(String query, int limit){
         List<String> matchedRooms = new ArrayList<String>();
-        synchronized (rooms) {
+        synchronized(rooms){
             Iterator<Room> iter = rooms.iterator();
-            while (iter.hasNext()) {
+            while(iter.hasNext()){
                 Room r = iter.next();
-                if (r.isRunning() && r.getName().toLowerCase().contains(query.toLowerCase())) {
+                if(r.isRunning() && r.getName().toLowerCase().contains(query.toLowerCase())){
                     matchedRooms.add(r.getName());
-                    if (matchedRooms.size() >= limit) {
+                    if(matchedRooms.size() >= limit){
                         break;
                     }
                 }
@@ -187,7 +181,6 @@ public enum Server {
         }
         return matchedRooms;
     }
-
     protected synchronized void removeRoom(Room r) {
         if (rooms.removeIf(room -> room == r)) {
             System.out.println("Removed empty room " + r.getName());

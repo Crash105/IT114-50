@@ -18,4 +18,3 @@ public class Menu extends JMenuBar{
         this.add(roomsMenu);
     }
 }
-

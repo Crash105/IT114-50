@@ -11,6 +11,8 @@ import java.util.logging.FileHandler;
 import java.util.logging.Handler;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
+import java.io.File;
+import java.io.FileWriter;
 
 /**
  * Built from a combination of answers from
@@ -48,6 +50,28 @@ public class MyLogger {
         }
         return new MyLogger(className);
 
+    }
+    
+    
+    public static void writeLog4(String s, String client) {
+
+        String filename = client + ".txt";
+
+        File New_File = new File(filename);
+
+        // mute is the name for my arraylist
+        // StringBuilder str = new StringBuilder();
+
+        String mutedFile = s;
+
+        try {
+            FileWriter Overwritten_File = new FileWriter(New_File, false);
+            Overwritten_File.write(mutedFile);
+
+            Overwritten_File.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private static void addCloseHandlersShutdownHook() {

@@ -6,10 +6,15 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Random;
+import java.io.File;
+import java.io.BufferedReader;
+import java.io.FileReader;
 
 import Project.common.Constants;
 import Project.common.GeneralUtils;
 import Project.common.MyLogger;
+
 
 public class Room implements AutoCloseable {
 	private String name;
@@ -55,8 +60,30 @@ public class Room implements AutoCloseable {
 			sendConnectionStatus(client, true);
 			sendRoomJoined(client);
 			sendUserListToClient(client);
+			String name = client.getClientName() + ".txt";
+            File f = new File(name);
+            String line;
+            try {
+            if (f.length() > 1) {
+                String s = String.valueOf(client.getSize());
+                if (s.equals("0")) {
+                    BufferedReader br = new BufferedReader(new FileReader(f));
+                    while ((line = br.readLine()) != null) {
+                        client.setAddList(line);
+                        //String s = String.valueOf(client.getSize());
+ 
+                    }
+           
+                }
+            }
+        }catch(Exception e) {
+ 
+           
+        }
+    }
+
 		}
-	}
+	
 
 	protected synchronized void removeClient(ServerThread client) {
 		if (!isRunning) {
@@ -99,6 +126,9 @@ public class Room implements AutoCloseable {
 				String[] comm2 = part1.split(" ");
 				String command = comm2[0];
 				String roomName;
+				String command1;
+				Iterator<ServerThread> iter = clients.iterator();
+				long from = (client == null) ? Constants.DEFAULT_CLIENT_ID : client.getClientId();
 				wasCommand = true;
 				switch (command) {
 					case CREATE_ROOM:
@@ -114,10 +144,115 @@ public class Room implements AutoCloseable {
 					case LOGOFF:
 						Room.disconnectClient(client, this);
 						break;
+						case "flip":
+						Random rand = new Random();
+						int upperlimit = 2;
+
+						
+						int diceroll = rand.nextInt(upperlimit);
+						// Diceroll could only choose from 0 or 1. 0 is Heads and 1 is Tails
+						String rev;
+
+						if (diceroll == 0) {
+
+							rev = "Heads";
+						} else {
+							rev = "Tails";
+						}
+
+						String rev2 = "The Coin Flipped the side: " + "<b>" + rev + "</b>";
+
+						while (iter.hasNext()) {
+						
+						
+						
+							ServerThread client2 = iter.next();
+							client2.sendMessage(from, rev2);
+						}
+						
+						break;
+			
+					case "roll":
+						command1 = comm2[1];
+						Random rand1 = new Random();
+						
+						int upperlimit1 = Integer.parseInt(command1);
+						
+
+						
+
+						// You can roll a number between 0 and any number you want. The code doesnt work unlesss a number is picked
+						int roll = rand1.nextInt(upperlimit1);
+
+						String result1 = Integer.toString(roll);
+						String result2 = "Between 0 and " + upperlimit1 + ", the code generated the number: " + "<u>" + result1 + "</u>";
+						while (iter.hasNext()) {
+						
+						
+						
+							ServerThread client2 = iter.next();
+							client2.sendMessage(from, result2);
+						}
+						
+						break;
+					case "mute":
+						command1 = comm2[1];
+						while (iter.hasNext()) {
+						
+						
+						
+						ServerThread client2 = iter.next();
+						if(command1.equals(client2.getClientName())) {
+						client2.sendMessage(from, client.getClientName() + ": Muted You");
+						}
+					}
+						// adds username to senders list
+						
+						
+						client.setAddList(command1);
+						client.writeLog2(client.getClientName());
+						break;
+					case "unmute":
+						// removes username from senders lis
+						command1 = comm2[1];
+						while (iter.hasNext()) {
+						
+						
+						
+							ServerThread client2 = iter.next();
+							if(command1.equals(client2.getClientName())) {
+							client2.sendMessage(from, client.getClientName() + ": Does not Mute you");
+							}
+						}
+						client.setRemoveList(command1);
+						client.writeLog2(client.getClientName());
+						break;
 					default:
 						wasCommand = false;
 						break;
 				}
+			}
+			if (message.startsWith("@")) {
+				long from = (client == null) ? Constants.DEFAULT_CLIENT_ID : client.getClientId();
+				String[] str = message.split("@");
+				String str1 = str[1];
+
+				client.sendMessage(from, message);
+				Iterator<ServerThread> iter = clients.iterator();
+				synchronized (clients) {
+					while (iter.hasNext()) {
+
+						ServerThread client2 = iter.next();
+						// checks if client2 matches @Username and that client2 is not muted with client
+						if (client2.getClientName().equals(str1) & !client2.isMuted(client.getClientName())) {
+							client2.sendMessage(from, message);
+						}
+
+					}
+
+				}
+				wasCommand = true;
+
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -177,9 +312,20 @@ public class Room implements AutoCloseable {
 		long from = (sender == null) ? Constants.DEFAULT_CLIENT_ID : sender.getClientId();
 		synchronized (clients) {
 			Iterator<ServerThread> iter = clients.iterator();
+			boolean messageSent = true;
 			while (iter.hasNext()) {
 				ServerThread client = iter.next();
-				boolean messageSent = client.sendMessage(from, message);
+
+				// mutes(doesnt send message) if client is muted with the sender
+				try {
+					if (!client.isMuted(sender.getClientName())) {
+
+						messageSent = client.sendMessage(from, message);
+					}
+
+				} catch (Exception e) {
+
+				}
 				if (!messageSent) {
 					handleDisconnect(iter, client);
 				}

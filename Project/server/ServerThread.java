@@ -10,7 +10,10 @@ import java.util.logging.Logger;
 import Project.common.Payload;
 import Project.common.PayloadType;
 import Project.common.RoomResultPayload;
-import Project.common.ClientPayload;;
+import Project.common.ClientPayload;
+import java.util.ArrayList;
+import java.io.File;
+import java.io.FileWriter;  
 
 /**
  * A server-side representation of a single client
@@ -21,11 +24,14 @@ public class ServerThread extends Thread {
     private boolean isRunning = false;
     private ObjectOutputStream out;// exposed here for send()
     // private Server server;// ref to our server so we can call methods on it
+    
     // more easily
     private Room currentRoom;
     private static Logger logger = Logger.getLogger(ServerThread.class.getName());
     private long myId;
     private String formattedName;
+    private boolean fullAge;
+    ArrayList<String> mute = new ArrayList<String>();
 
     public void setClientId(long id) {
         myId = id;
@@ -46,6 +52,76 @@ public class ServerThread extends Thread {
         return formattedName;
     }
 
+    protected void setAddList(String name) {
+        mute.add(name);
+    }
+   
+    //returns clients list
+    protected String getSize() {
+        String s = String.valueOf(mute.size());
+        return s;
+    }
+
+ 
+    //removes list from client
+    protected void setRemoveList(String name) {
+        mute.remove(name);
+    }
+
+    //checks if cllient is muted with sender
+    protected synchronized boolean isMuted(String str2) {
+        // String findUser;
+        // boolean yes = false;
+        if (mute.size() == 0) {
+            fullAge = false;
+        }
+ 
+        else if (mute.size() > 0) {
+            fullAge = false;
+            for (String mutes : mute) {
+ 
+                String findUser = mutes;
+                if (findUser.equals(str2)) {
+                    fullAge = true;
+                }
+ 
+            }
+        }
+ 
+        return fullAge;
+        // fullAge = false;
+    }
+ 
+    
+    protected synchronized void writeLog2(String client) {
+ 
+        String filename = client + ".txt";
+ 
+     
+        File New_File = new File(filename);
+ 
+        // mute is the name for my arraylist
+        StringBuilder str = new StringBuilder();
+ 
+        for (String mutes : mute) {
+            str.append(mutes + "\n");
+        }
+        String mutedFile = str.toString();
+ 
+        try {
+            FileWriter Overwritten_File = new FileWriter(New_File, false);
+            Overwritten_File.write(mutedFile);
+ 
+            Overwritten_File.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+ 
+    
+    
+   
+   
 
     private void info(String message) {
         System.out.println(String.format("Thread[%s]: %s", getId(), message));

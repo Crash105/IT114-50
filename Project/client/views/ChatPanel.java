@@ -13,6 +13,7 @@ import java.awt.event.ContainerListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.io.IOException;
+import java.io.File;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
@@ -29,6 +30,7 @@ import Project.client.Client;
 import Project.client.ClientUtils;
 import Project.client.ICardControls;
 import Project.common.MyLogger;
+import Project.client.ClientUI;
 
 public class ChatPanel extends JPanel {
     private static MyLogger logger = MyLogger.getLogger(ChatPanel.class.getName());
@@ -37,6 +39,8 @@ public class ChatPanel extends JPanel {
     private UserListPanel userListPanel;
     private Dimension lastSize = new Dimension();
 
+    
+
     public ChatPanel(ICardControls controls) {
         super(new BorderLayout(10, 10));
         JPanel wrapper = new JPanel();
@@ -44,7 +48,7 @@ public class ChatPanel extends JPanel {
         JPanel content = new JPanel();
         content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
         content.setAlignmentY(Component.BOTTOM_ALIGNMENT);
-        
+
         // wraps a viewport to provide scroll capabilities
         JScrollPane scroll = new JScrollPane(content);
         scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
@@ -59,12 +63,18 @@ public class ChatPanel extends JPanel {
         JTextField textValue = new JTextField();
         input.add(textValue);
         JButton button = new JButton("Send");
+        JButton button1 = new JButton("Export");
+        //boolean isExported;
         // lets us submit with the enter key instead of just the button click
+
+     
+
+
         textValue.addKeyListener(new KeyListener() {
 
             @Override
             public void keyTyped(KeyEvent e) {
-
+               
             }
 
             @Override
@@ -80,6 +90,31 @@ public class ChatPanel extends JPanel {
             }
 
         });
+
+        button1.addActionListener((event) -> {
+            String filename = "program11";
+            String s;
+            StringBuilder str = new StringBuilder();
+            try {
+                for (Component d : chatArea.getComponents()) {
+    
+                    JEditorPane children = (JEditorPane) d;
+                    s = children.getText();
+                    str.append(s);
+    
+                }
+                
+                    MyLogger.writeLog4(str.toString(), filename);
+                
+
+    
+            } catch (Exception e) {
+    
+                e.printStackTrace();
+            }
+        });
+
+
         button.addActionListener((event) -> {
             try {
                 String text = textValue.getText().trim();
@@ -101,6 +136,7 @@ public class ChatPanel extends JPanel {
         chatArea = content;
         this.wrapper = wrapper;
         input.add(button);
+        input.add(button1);
         userListPanel = new UserListPanel(controls);
         this.add(userListPanel, BorderLayout.EAST);
         this.add(input, BorderLayout.SOUTH);
@@ -112,7 +148,7 @@ public class ChatPanel extends JPanel {
             public void componentAdded(ContainerEvent e) {
                 if (chatArea.isVisible()) {
                     // scroll down on new message
-                    
+
                     chatArea.revalidate();
                     chatArea.repaint();
                     /**
@@ -134,7 +170,7 @@ public class ChatPanel extends JPanel {
 
                     };
                     vertical.addAdjustmentListener(scroller);
-                    
+
                 }
             }
 
@@ -189,8 +225,8 @@ public class ChatPanel extends JPanel {
             userListPanel.revalidate();
             userListPanel.repaint();
             w = (int) Math.ceil(frameSize.getWidth() * .7f);
-            //preferred size was preventing it from growing with its children
-            //chatArea.setPreferredSize(new Dimension(w, (int) Short.MAX_VALUE));
+            // preferred size was preventing it from growing with its children
+            // chatArea.setPreferredSize(new Dimension(w, (int) Short.MAX_VALUE));
             chatArea.setMinimumSize(new Dimension(w, (int) frameSize.getHeight()));
             userListPanel.resizeUserListItems();
             resizeMessages();
@@ -241,6 +277,6 @@ public class ChatPanel extends JPanel {
         ClientUtils.clearBackground(textContainer);
         // add to container and tell the layout to revalidate
         content.add(textContainer);
-        
+
     }
 }

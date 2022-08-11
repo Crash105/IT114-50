@@ -10,7 +10,11 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
+import java.util.Enumeration;
 import java.util.Hashtable;
+import java.io.File;
+import java.io.FileWriter;
+import javax.swing.JEditorPane;
 
 import javax.swing.JFrame;
 import javax.swing.JMenuBar;
@@ -25,8 +29,8 @@ import Project.client.views.UserInputPanel;
 import Project.common.Constants;
 import Project.common.MyLogger;
 
-
 public class ClientUI extends JFrame implements IClientEvents, ICardControls {
+
     CardLayout card = null;// accessible so we can call next() and previous()
     Container container;// accessible to be passed to card methods
     String originalTitle = null;
@@ -43,7 +47,6 @@ public class ClientUI extends JFrame implements IClientEvents, ICardControls {
     private UserInputPanel inputPanel;
     private RoomsPanel roomsPanel;
     private ChatPanel chatPanel;
-    
 
     public ClientUI(String title) {
         super(title);// call the parent's constructor
@@ -65,7 +68,7 @@ public class ClientUI extends JFrame implements IClientEvents, ICardControls {
             }
         });
 
-        setMinimumSize(new Dimension(800, 600));
+        setMinimumSize(new Dimension(400, 400));
         // centers window
         setLocationRelativeTo(null);
         card = new CardLayout();
@@ -78,7 +81,6 @@ public class ClientUI extends JFrame implements IClientEvents, ICardControls {
         inputPanel = new UserInputPanel(this);
         chatPanel = new ChatPanel(this);
         roomsPanel = new RoomsPanel(this);
-        
 
         // https://stackoverflow.com/a/9093526
         // this tells the x button what to do (updated to be controlled via a prompt)
@@ -119,6 +121,8 @@ public class ClientUI extends JFrame implements IClientEvents, ICardControls {
         }
         System.out.println(currentCardPanel.getName());
     }
+
+    
 
     @Override
     public void next() {
@@ -165,6 +169,46 @@ public class ClientUI extends JFrame implements IClientEvents, ICardControls {
         return clientName;
     }
 
+    /* 
+
+    public void isExported() {
+        String s;
+
+        try {
+            for (Component d : chatPanel.getComponents()) {
+
+                JEditorPane children = (JEditorPane) d;
+                s = children.getText();
+
+            }
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+        }
+    };
+
+    public static void writeLog4(String s, String client) {
+
+        String filename = client + ".txt";
+
+        File New_File = new File(filename);
+
+        // mute is the name for my arraylist
+        // StringBuilder str = new StringBuilder();
+
+        String mutedFile = s;
+
+        try {
+            FileWriter Overwritten_File = new FileWriter(New_File, false);
+            Overwritten_File.write(mutedFile);
+
+            Overwritten_File.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+*/
     /**
      * Used to handle new client connects/disconnects or existing client lists (one
      * by one)
@@ -173,11 +217,13 @@ public class ClientUI extends JFrame implements IClientEvents, ICardControls {
      * @param clientName
      * @param isConnect
      */
-    private synchronized void processClientConnectionStatus(long clientId, String clientName, String formattedName, boolean isConnect) {
+    private synchronized void processClientConnectionStatus(long clientId, String clientName, String formattedName,
+            boolean isConnect) {
         if (isConnect) {
             if (!userList.containsKey(clientId)) {
                 logger.info(String.format("Adding %s[%s]", clientName, clientId));
                 userList.put(clientId, formattedName);
+                // String formattedName1 = "<mark>" + formattedName + "</mark>";
                 chatPanel.addUserListItem(clientId, String.format("%s (%s)", formattedName, clientId));
             }
         } else {
@@ -205,7 +251,7 @@ public class ClientUI extends JFrame implements IClientEvents, ICardControls {
     @Override
     public void onClientDisconnect(long clientId, String clientName, String message) {
         if (currentCard.ordinal() >= Card.CHAT.ordinal()) {
-            processClientConnectionStatus(clientId, clientName,null, false);
+            processClientConnectionStatus(clientId, clientName, null, false);
             chatPanel.addText(String.format("*%s %s*", clientName, message));
         }
     }
@@ -215,6 +261,7 @@ public class ClientUI extends JFrame implements IClientEvents, ICardControls {
         if (currentCard.ordinal() >= Card.CHAT.ordinal()) {
             String clientName = mapClientId(clientId);
             chatPanel.addText(String.format("%s: %s", clientName, message));
+
         }
     }
 
@@ -222,7 +269,7 @@ public class ClientUI extends JFrame implements IClientEvents, ICardControls {
     public void onReceiveClientId(long id) {
         if (myId == Constants.DEFAULT_CLIENT_ID) {
             myId = id;
-            
+
             show(Card.CHAT.name());
         } else {
             logger.warning("Received client id after already being set, this shouldn't happen");
@@ -262,5 +309,4 @@ public class ClientUI extends JFrame implements IClientEvents, ICardControls {
         }
     }
 
-    
 }

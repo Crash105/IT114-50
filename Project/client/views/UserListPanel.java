@@ -12,10 +12,14 @@ import javax.swing.JEditorPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.ScrollPaneConstants;
+import java.awt.event.ContainerEvent;
+
 
 import Project.client.ClientUtils;
 import Project.client.ICardControls;
 import Project.common.MyLogger;
+import javax.swing.text.Highlighter;
+import javax.swing.text.DefaultHighlighter;
 
 public class UserListPanel extends JPanel {
     JPanel userListArea;
@@ -62,6 +66,9 @@ public class UserListPanel extends JPanel {
 
         });
     }
+    
+    
+
 
     protected void resizeUserListItems() {
         for (Component p : userListArea.getComponents()) {
@@ -80,7 +87,21 @@ public class UserListPanel extends JPanel {
         logger.info("Adding user to list: " + clientName);
         JPanel content = userListArea;
         logger.info("Userlist: " + content.getSize());
+        
+
+        /* 
+        for (Component p : userListArea.getComponents()) {
+             
+            JEditorPane children = (JEditorPane)p;
+            String s = children.getText();
+            if(s.equals(clientName)) {
+                clientName = "<b>" + clientName + "</b>"; 
+            }
+        }
+        */
         JEditorPane textContainer = new JEditorPane("text/html", clientName);
+        //textContainer.setHighlighter(highlighter);
+        
         textContainer.setName(clientId + "");
         // sizes the panel to attempt to take up the width of the container
         // and expand in height based on word wrapping

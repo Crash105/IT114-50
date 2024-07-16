@@ -12,10 +12,10 @@
 ## To use the chatroom function of web application, you must:
 - Create a split Git bash
 - cd to IT114-50
-- In first Git bash terminal type javac Project/Server.java and then java Project.Server [port](I use port 3000)
-- In the second Git bash terminal type javac Project/Client.java and then Java Project.Client,
-- After Java Project.Client, type /name your_name(You can give it any name), Then type /conenct localhost 3000[use your own port]
-- You will then see your messages in both the server and client git bash terminals
+- In first Git bash terminal type javac Project/server/Server.java and then java Project.server.Server
+- In the second Git bash terminal type javac Project/client/ClientUI.java and then Java Project.client.ClientUI
+- A window should pop up, click 'next', and then in the box titled 'Username', type a random username
+- You will then see a chatroom box, add as many users you want and you can chat with them
 
 ## Visual presentation of Documentation: https://github.com/Crash107/IT114-50-forked/blob/main/Project/proposal.md
 

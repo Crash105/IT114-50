@@ -1,39 +1,55 @@
-#Chatroom Application
+# Chatroom Application
 
-##Instructions on how to launch and use the application
+## Instructions on how to launch and use the application
 
-##Clone the Github repo, go to the project root and type in seperate terminals
-'
+### Setup
+1. Clone the Github repo
+2. Go to the project root
+3. Type the following commands in separate terminals:
 
-####javac Project/serer/Server.java
-####java Project.server.Server
+```bash
+javac Project/server/Server.java
+java Project.server.Server
+```
 
-####javac Project/client/ClientUI.java
-####java Project.client.ClientUI
+```bash
+javac Project/client/ClientUI.java
+java Project.client.ClientUI
+```
 
-####The more times you execute the ClientUI code, the more clients you can have in your chatroom application
+**Note:** The more times you execute the ClientUI code, the more clients you can have in your chatroom application.
 
-####Use the following commands for the chatroom application
+## Commands
 
-##flip: Gives the output of randomly throwing Heads or tails
-##roll [number]: For example, when you type roll 20, it will generate a random number between one and 20
+### Basic Commands
+- **flip**: Gives the output of randomly throwing Heads or Tails
+- **roll [number]**: For example, when you type `roll 20`, it will generate a random number between 1 and 20
 
-####whisper: To message a private message to a user do @user_name you want to send to@message you want to send to user. For example @Dan@Hello, good to see you
+### Private Messaging
+- **whisper**: To send a private message to a user, use the format: `@username@message`
+  - Example: `@Dan@Hello, good to see you`
 
-###mute user: To mute a user meaning you dont want to see there messages, type /mute user
-###unmute user: To unmute the user you unmuteed, type /unmute user
+### User Management
+- **mute user**: To mute a user (you won't see their messages), type `/mute username`
+- **unmute user**: To unmute a previously muted user, type `/unmute username`
 
-###createroom: To create a chatroom, type /createroom [number], the number is an identifier of the chatroom. When you do this, you not only create the room, but automatically join the room. Only people in room can send message beitween eachother
+### Room Management
+- **createroom**: To create a chatroom, type `/createroom [number]`
+  - The number is an identifier for the chatroom
+  - When you create a room, you automatically join it
+  - Only people in the same room can send messages to each other
+- **joinroom**: To join a chatroom, type `/joinroom [number]`
+  - The number is the identifier of the chatroom you want to join
 
-###joinroom: To join a chatroom, type /joinroom [number], the number is an identifier of the chatroom.
+## Message Formatting
 
-##Format messages
+To format messages, put the formatting symbols around the text you want to format:
 
-###To format messages, put the below symbols between the symbol you want to format
-
-`#r#` ###Turns the color of message red
-`#b#` ###Turns the color of message blue
-`#g#` ###Turns the color of message green
-`--` ###Turns the message to italics
-`__` ###Turns the message to underline
-`**` ###Turns the message to bold
+| Format | Symbol | Description |
+|--------|--------|-------------|
+| Red text | `#r#text#r#` | Turns the color of message red |
+| Blue text | `#b#text#b#` | Turns the color of message blue |
+| Green text | `#g#text#g#` | Turns the color of message green |
+| Italics | `--text--` | Italicizes the message |
+| Underline | `__text__` | Underlines the message|
+| Bold | `**text**` | Bolds the message |

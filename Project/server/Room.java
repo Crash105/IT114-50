@@ -15,7 +15,6 @@ import Project.common.Constants;
 import Project.common.GeneralUtils;
 import Project.common.MyLogger;
 
-
 public class Room implements AutoCloseable {
 	private String name;
 	private List<ServerThread> clients = Collections.synchronizedList(new ArrayList<ServerThread>());
@@ -29,6 +28,7 @@ public class Room implements AutoCloseable {
 	private final static String LOGOFF = "logoff";
 	private static MyLogger logger = MyLogger.getLogger(Room.class.getName());
 	private HashMap<String, String> converter = null;
+
 	public Room(String name) {
 		this.name = name;
 		isRunning = true;
@@ -61,29 +61,27 @@ public class Room implements AutoCloseable {
 			sendRoomJoined(client);
 			sendUserListToClient(client);
 			String name = client.getClientName() + ".txt";
-            File f = new File(name);
-            String line;
-            try {
-            if (f.length() > 1) {
-                String s = String.valueOf(client.getSize());
-                if (s.equals("0")) {
-                    BufferedReader br = new BufferedReader(new FileReader(f));
-                    while ((line = br.readLine()) != null) {
-                        client.setAddList(line);
-                        //String s = String.valueOf(client.getSize());
- 
-                    }
-           
-                }
-            }
-        }catch(Exception e) {
- 
-           
-        }
-    }
+			File f = new File(name);
+			String line;
+			try {
+				if (f.length() > 1) {
+					String s = String.valueOf(client.getSize());
+					if (s.equals("0")) {
+						BufferedReader br = new BufferedReader(new FileReader(f));
+						while ((line = br.readLine()) != null) {
+							client.setAddList(line);
+							// String s = String.valueOf(client.getSize());
 
+						}
+
+					}
+				}
+			} catch (Exception e) {
+
+			}
 		}
-	
+
+	}
 
 	protected synchronized void removeClient(ServerThread client) {
 		if (!isRunning) {
@@ -144,11 +142,10 @@ public class Room implements AutoCloseable {
 					case LOGOFF:
 						Room.disconnectClient(client, this);
 						break;
-						case "flip":
+					case "flip":
 						Random rand = new Random();
 						int upperlimit = 2;
 
-						
 						int diceroll = rand.nextInt(upperlimit);
 						// Diceroll could only choose from 0 or 1. 0 is Heads and 1 is Tails
 						String rev;
@@ -163,52 +160,44 @@ public class Room implements AutoCloseable {
 						String rev2 = "The Coin Flipped the side: " + "<b>" + rev + "</b>";
 
 						while (iter.hasNext()) {
-						
-						
-						
+
 							ServerThread client2 = iter.next();
 							client2.sendMessage(from, rev2);
 						}
-						
+
 						break;
-			
+
 					case "roll":
 						command1 = comm2[1];
 						Random rand1 = new Random();
-						
+
 						int upperlimit1 = Integer.parseInt(command1);
-						
 
-						
-
-						// You can roll a number between 0 and any number you want. The code doesnt work unlesss a number is picked
+						// You can roll a number between 0 and any number you want. The code doesnt work
+						// unlesss a number is picked
 						int roll = rand1.nextInt(upperlimit1);
 
 						String result1 = Integer.toString(roll);
-						String result2 = "Between 0 and " + upperlimit1 + ", the code generated the number: " + "<u>" + result1 + "</u>";
+						String result2 = "Between 0 and " + upperlimit1 + ", the code generated the number: " + "<u>"
+								+ result1 + "</u>";
 						while (iter.hasNext()) {
-						
-						
-						
+
 							ServerThread client2 = iter.next();
 							client2.sendMessage(from, result2);
 						}
-						
+
 						break;
 					case "mute":
 						command1 = comm2[1];
 						while (iter.hasNext()) {
-						
-						
-						
-						ServerThread client2 = iter.next();
-						if(command1.equals(client2.getClientName())) {
-						client2.sendMessage(from, client.getClientName() + ": Muted You");
+
+							ServerThread client2 = iter.next();
+							if (command1.equals(client2.getClientName())) {
+								client2.sendMessage(from, client.getClientName() + ": Muted You");
+							}
 						}
-					}
 						// adds username to senders list
-						
-						
+
 						client.setAddList(command1);
 						client.writeLog2(client.getClientName());
 						break;
@@ -216,12 +205,10 @@ public class Room implements AutoCloseable {
 						// removes username from senders lis
 						command1 = comm2[1];
 						while (iter.hasNext()) {
-						
-						
-						
+
 							ServerThread client2 = iter.next();
-							if(command1.equals(client2.getClientName())) {
-							client2.sendMessage(from, client.getClientName() + ": Does not Mute you");
+							if (command1.equals(client2.getClientName())) {
+								client2.sendMessage(from, client.getClientName() + ": Does not Mute you");
 							}
 						}
 						client.setRemoveList(command1);
@@ -235,9 +222,14 @@ public class Room implements AutoCloseable {
 			if (message.startsWith("@")) {
 				long from = (client == null) ? Constants.DEFAULT_CLIENT_ID : client.getClientId();
 				String[] str = message.split("@");
-				String str1 = str[1];
 
-				client.sendMessage(from, message);
+				String str1 = str[1];
+				String str2 = str[2];
+
+				System.out.println(str1);
+				System.out.println(str2);
+
+				client.sendMessage(from, str2);
 				Iterator<ServerThread> iter = clients.iterator();
 				synchronized (clients) {
 					while (iter.hasNext()) {
@@ -245,7 +237,7 @@ public class Room implements AutoCloseable {
 						ServerThread client2 = iter.next();
 						// checks if client2 matches @Username and that client2 is not muted with client
 						if (client2.getClientName().equals(str1) & !client2.isMuted(client.getClientName())) {
-							client2.sendMessage(from, message);
+							client2.sendMessage(from, client.getClientName() + " sent you a private message: " + str2);
 						}
 
 					}
@@ -335,9 +327,9 @@ public class Room implements AutoCloseable {
 
 	protected String formatMessage(String message) {
 		String alteredMessage = message;
-		
+
 		// expect pairs ** -- __
-		if(converter == null){
+		if (converter == null) {
 			converter = new HashMap<String, String>();
 			// user symbol => output text separated by |
 			converter.put("\\*{2}", "<b>|</b>");
